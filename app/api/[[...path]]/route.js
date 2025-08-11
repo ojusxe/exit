@@ -1,104 +1,205 @@
-import { MongoClient } from 'mongodb'
-import { v4 as uuidv4 } from 'uuid'
 import { NextResponse } from 'next/server'
 
-// MongoDB connection
-let client
-let db
-
-async function connectToMongo() {
-  if (!client) {
-    client = new MongoClient(process.env.MONGO_URL)
-    await client.connect()
-    db = client.db(process.env.DB_NAME)
-  }
-  return db
-}
-
-// Helper function to handle CORS
-function handleCORS(response) {
-  response.headers.set('Access-Control-Allow-Origin', process.env.CORS_ORIGINS || '*')
-  response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS')
-  response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization')
-  response.headers.set('Access-Control-Allow-Credentials', 'true')
-  return response
-}
-
-// OPTIONS handler for CORS
-export async function OPTIONS() {
-  return handleCORS(new NextResponse(null, { status: 200 }))
-}
-
-// Route handler function
-async function handleRoute(request, { params }) {
-  const { path = [] } = params
-  const route = `/${path.join('/')}`
-  const method = request.method
+// Simple API routes for RupeeBee showcase website
+export async function GET(request, { params }) {
+  const path = params?.path || []
+  const endpoint = path.join('/')
 
   try {
-    const db = await connectToMongo()
+    switch (endpoint) {
+      case 'stats':
+        // Return app statistics
+        return NextResponse.json({
+          usersProtected: 50000,
+          calculationsPerformed: 250000,
+          fraudPrevented: 1200,
+          modulesCompleted: 75000,
+          appRating: 4.8,
+          totalDownloads: 100000
+        })
 
-    // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
-    if (route === '/root' && method === 'GET') {
-      return handleCORS(NextResponse.json({ message: "Hello World" }))
+      case 'features':
+        // Return app features
+        return NextResponse.json({
+          features: [
+            {
+              id: 'learn',
+              name: 'Learn',
+              description: 'Interactive financial literacy modules in multiple languages',
+              icon: 'graduation-cap',
+              modules: 10,
+              languages: ['Hindi', 'English', 'Punjabi']
+            },
+            {
+              id: 'shield',
+              name: 'Shield',
+              description: 'Advanced fraud detection and security training',
+              icon: 'shield',
+              securityChecks: 87,
+              fraudTypesDetected: 15
+            },
+            {
+              id: 'calculator',
+              name: 'Calculator',
+              description: 'Comprehensive financial planning tools',
+              icon: 'calculator',
+              calculatorTypes: ['EMI', 'SIP', 'FD', 'Home Loan', 'Gold Price', 'Retirement', 'Goal Setting', 'Compound Interest']
+            },
+            {
+              id: 'sarathi',
+              name: 'Sarathi',
+              description: 'AI-powered financial assistant',
+              icon: 'bot',
+              availability: '24/7',
+              languages: ['Hindi', 'English', 'Punjabi'],
+              compliance: ['RBI', 'NPCI']
+            },
+            {
+              id: 'quest',
+              name: 'Quest',
+              description: 'Gamified learning with rewards',
+              icon: 'trophy',
+              quizzes: 50,
+              achievements: 25,
+              leaderboards: true
+            }
+          ]
+        })
+
+      case 'security':
+        // Return security information
+        return NextResponse.json({
+          securityMeasures: [
+            'End-to-end encryption',
+            'Biometric authentication',
+            'Real-time fraud detection',
+            'Regular security audits',
+            'RBI compliance',
+            'NPCI guidelines adherence'
+          ],
+          certifications: ['ISO 27001', 'PCI DSS', 'SOC 2'],
+          fraudTypesDetected: [
+            'Phishing calls',
+            'Fake banking apps',
+            'SMS scams',
+            'UPI fraud',
+            'Identity theft',
+            'Investment scams'
+          ]
+        })
+
+      case 'testimonials':
+        // Return user testimonials (placeholder data)
+        return NextResponse.json({
+          testimonials: [
+            {
+              id: 1,
+              name: 'Rajesh Kumar',
+              location: 'Delhi',
+              rating: 5,
+              comment: 'RupeeBee helped me identify a fake loan app scam. The security training is excellent!',
+              module: 'Shield'
+            },
+            {
+              id: 2,
+              name: 'Priya Sharma',
+              location: 'Mumbai',
+              rating: 5,
+              comment: 'The financial calculators are so helpful for planning my investments. Highly recommended!',
+              module: 'Calculator'
+            },
+            {
+              id: 3,
+              name: 'Amit Singh',
+              location: 'Pune',
+              rating: 4,
+              comment: 'Learning modules are easy to understand. Finally, financial education in simple Hindi!',
+              module: 'Learn'
+            }
+          ]
+        })
+
+      case 'download-links':
+        // Return app download information
+        return NextResponse.json({
+          android: {
+            playStore: 'https://play.google.com/store/apps/details?id=com.psb.rupeebee',
+            directDownload: '/downloads/rupeebee-android.apk',
+            version: '2.1.0',
+            size: '45 MB',
+            requirements: 'Android 6.0 and up'
+          },
+          ios: {
+            appStore: 'https://apps.apple.com/app/rupeebee/id123456789',
+            version: '2.1.0',
+            size: '42 MB',
+            requirements: 'iOS 12.0 and up'
+          },
+          qrCodes: {
+            android: '/images/qr-android.png',
+            ios: '/images/qr-ios.png'
+          }
+        })
+
+      default:
+        return NextResponse.json(
+          { error: 'Endpoint not found', available_endpoints: ['stats', 'features', 'security', 'testimonials', 'download-links'] },
+          { status: 404 }
+        )
     }
-    // Root endpoint - GET /api/root (since /api/ is not accessible with catch-all)
-    if (route === '/' && method === 'GET') {
-      return handleCORS(NextResponse.json({ message: "Hello World" }))
-    }
-
-    // Status endpoints - POST /api/status
-    if (route === '/status' && method === 'POST') {
-      const body = await request.json()
-      
-      if (!body.client_name) {
-        return handleCORS(NextResponse.json(
-          { error: "client_name is required" }, 
-          { status: 400 }
-        ))
-      }
-
-      const statusObj = {
-        id: uuidv4(),
-        client_name: body.client_name,
-        timestamp: new Date()
-      }
-
-      await db.collection('status_checks').insertOne(statusObj)
-      return handleCORS(NextResponse.json(statusObj))
-    }
-
-    // Status endpoints - GET /api/status
-    if (route === '/status' && method === 'GET') {
-      const statusChecks = await db.collection('status_checks')
-        .find({})
-        .limit(1000)
-        .toArray()
-
-      // Remove MongoDB's _id field from response
-      const cleanedStatusChecks = statusChecks.map(({ _id, ...rest }) => rest)
-      
-      return handleCORS(NextResponse.json(cleanedStatusChecks))
-    }
-
-    // Route not found
-    return handleCORS(NextResponse.json(
-      { error: `Route ${route} not found` }, 
-      { status: 404 }
-    ))
-
   } catch (error) {
     console.error('API Error:', error)
-    return handleCORS(NextResponse.json(
-      { error: "Internal server error" }, 
+    return NextResponse.json(
+      { error: 'Internal server error' },
       { status: 500 }
-    ))
+    )
   }
 }
 
-// Export all HTTP methods
-export const GET = handleRoute
-export const POST = handleRoute
-export const PUT = handleRoute
-export const DELETE = handleRoute
-export const PATCH = handleRoute
+// Handle POST requests for contact forms, newsletter signup, etc.
+export async function POST(request, { params }) {
+  const path = params?.path || []
+  const endpoint = path.join('/')
+
+  try {
+    const body = await request.json()
+
+    switch (endpoint) {
+      case 'contact':
+        // Handle contact form submission
+        console.log('Contact form submission:', body)
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Thank you for your message. We will get back to you soon!' 
+        })
+
+      case 'newsletter':
+        // Handle newsletter signup
+        console.log('Newsletter signup:', body)
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Successfully subscribed to RupeeBee updates!' 
+        })
+
+      case 'feedback':
+        // Handle app feedback
+        console.log('App feedback:', body)
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Thank you for your feedback!' 
+        })
+
+      default:
+        return NextResponse.json(
+          { error: 'POST endpoint not found' },
+          { status: 404 }
+        )
+    }
+  } catch (error) {
+    console.error('POST API Error:', error)
+    return NextResponse.json(
+      { error: 'Invalid request body' },
+      { status: 400 }
+    )
+  }
+}
