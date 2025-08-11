@@ -10,8 +10,8 @@ import sys
 import os
 from typing import Dict, Any
 
-# Get base URL from environment
-BASE_URL = os.getenv('NEXT_PUBLIC_BASE_URL', 'https://3b999f24-4cde-4452-8267-13db7171d8f7.preview.emergentagent.com')
+# Use localhost for testing in the container environment
+BASE_URL = "http://localhost:3000"
 API_BASE = f"{BASE_URL}/api"
 
 class RupeeBeeAPITester:
